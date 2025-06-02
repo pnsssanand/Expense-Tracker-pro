@@ -8,10 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Prevent Rollup native loader error on Vercel
+      "@rollup/rollup-linux-x64-gnu": path.resolve(__dirname, "./stub-native.js"),
     },
-  },
-  optimizeDeps: {
-    exclude: ["@rollup/rollup-linux-x64-gnu"],
   },
   build: {
     rollupOptions: {
