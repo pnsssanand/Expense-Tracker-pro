@@ -1,0 +1,350 @@
+/* 
+ * This file uses Tailwind CSS directives which are processed by PostCSS.
+ * VS Code may show warnings for @tailwind and @apply directives - these can be safely ignored.
+ * If warnings are bothersome, consider installing a CSS/PostCSS/Tailwind CSS extension for your editor.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: 100vh;
+    color: #1a202c !important;
+  }
+
+  /* Ensure all text elements have dark color by default */
+  h1, h2, h3, h4, h5, h6 {
+    color: #1a202c !important;
+    font-weight: 600;
+  }
+
+  /* Reset default text colors but with lower priority to allow overrides */
+  p, span, div, label, input, textarea {
+    color: #374151;
+  }
+
+  /* Override for buttons to allow variable colors */
+  button {
+    color: inherit;
+  }
+
+  /* Override any white or light text */
+  .text-white {
+    color: #ffffff !important;
+  }
+
+  .text-gray-900 {
+    color: #111827 !important;
+  }
+
+  .text-gray-800 {
+    color: #1f2937 !important;
+  }
+
+  .text-gray-700 {
+    color: #374151 !important;
+  }
+
+  .text-gray-600 {
+    color: #4b5563 !important;
+  }
+
+  .text-gray-500 {
+    color: #6b7280 !important;
+  }
+  
+  /* Red and green text colors */
+  .text-red-400 {
+    color: #f87171 !important;
+  }
+  
+  .text-green-400 {
+    color: #34d399 !important;
+  }
+
+  /* Ensure card text is visible */
+  .card, [data-card] {
+    color: #1a202c !important;
+  }
+
+  /* Fix any transparent or invisible text */
+  .text-transparent {
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+  
+  /* Fix dropdown menus visibility */
+  [role="listbox"] {
+    background-color: #1e293b !important;
+  }
+  
+  [role="option"] {
+    color: #fff !important;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl;
+    color: #1a202c !important;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .floating-card {
+    @apply transform transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+    color: #1a202c !important;
+  }
+  
+  .premium-input {
+    @apply bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300;
+    color: #1a202c !important;
+  }
+  
+  .premium-button {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300;
+  }
+
+  /* Ensure stat cards have visible text */
+  .stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a202c !important;
+    border: 1px solid rgba(229, 231, 235, 0.8);
+  }
+
+  .stat-card h3,
+  .stat-card p,
+  .stat-card span {
+    color: #1a202c !important;
+  }
+
+  .stat-value {
+    color: #1a202c !important;
+    font-weight: 700;
+    font-size: 1.875rem;
+  }
+
+  .stat-label {
+    color: #6b7280 !important;
+    font-weight: 500;
+  }
+
+  .stat-change {
+    font-weight: 600;
+  }
+
+  .stat-change.positive {
+    color: #059669 !important;
+  }
+
+  .stat-change.negative {
+    color: #dc2626 !important;
+  }
+  
+  /* Dropdown specific styles */
+  .select-dropdown {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+  }
+  
+  .select-dropdown-item {
+    color: #f1f5f9 !important;
+  }
+  
+  .select-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Transaction sheet specific styles */
+  .transaction-text {
+    color: #1a202c !important;
+  }
+  
+  .transaction-amount {
+    font-weight: 600;
+  }
+  
+  .transaction-amount.income {
+    color: #34d399 !important;
+  }
+  
+  .transaction-amount.expense {
+    color: #f87171 !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+/* Enhanced animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Enhanced transitions for all elements */
+* {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Better focus styles */
+input:focus, button:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Modern button styles */
+button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Ensure all card content is visible */
+.card-content,
+.card-header,
+.card-title {
+  color: #1a202c !important;
+}
+
+/* Fix any remaining invisible text issues */
+[class*="text-"] {
+  color: inherit;
+}
+
+/* Specific fixes for dashboard stats */
+.dashboard-stat {
+  color: #1a202c !important;
+}
+
+.dashboard-stat .value {
+  color: #1a202c !important;
+  font-weight: 700;
+}
+
+.dashboard-stat .label {
+  color: #6b7280 !important;
+}

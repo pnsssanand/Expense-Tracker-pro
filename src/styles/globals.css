@@ -1,0 +1,301 @@
+/* Add this to your existing CSS file */
+
+/* Ensure dropdowns are visible */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Style the select dropdown content */
+.select-content {
+  background-color: #1f2937 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.premium-input {
+  width: 100% !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.premium-input:focus, 
+.premium-input:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Fix checkmark color in dark mode */
+[data-radix-select-item-indicator] svg {
+  color: white;
+}
+
+/* Ensuring dropdown menu items have good visibility */
+[role="listbox"] {
+  background-color: rgba(31, 41, 55, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+[role="option"] {
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s;
+}
+
+[role="option"]:hover,
+[role="option"][data-highlighted="true"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[role="option"][aria-selected="true"] {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Fix dropdown positioning */
+.premium-input {
+  width: 100% !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Fix positioning when viewport shifts */
+.fixed-position-dropdown {
+  position: fixed !important;
+}
+
+/* Add these styles for improved dropdown visibility and premium button */
+
+/* Dropdown styling */
+.dropdown-content {
+  background-color: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  z-index: 9999 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 8px !important;
+}
+
+.dropdown-item {
+  color: white !important;
+  transition: background-color 0.2s !important;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dropdown-item[data-highlighted="true"] {
+  background-color: rgba(79, 70, 229, 0.2) !important;
+  color: white !important;
+}
+
+.dropdown-item[data-state="checked"] {
+  background-color: rgba(79, 70, 229, 0.2) !important;
+}
+
+/* Premium button styling */
+.premium-button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background-size: 200% auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.premium-button:hover {
+  background-position: right center;
+  transform: translateY(-1px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.premium-button:active {
+  transform: translateY(0);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.premium-button:disabled {
+  background: linear-gradient(to right, #4b5563, #6b7280);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Fix Radix UI dropdown portal positioning */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Add these styles to match the theme in the screenshot */
+
+/* Modern input styling */
+.modern-input {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.modern-input:focus, 
+.modern-input:hover {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Dropdown styling - light theme */
+.modern-dropdown {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+  z-index: 9999 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+/* Remove conflicting styles */
+[role="listbox"] {
+  background-color: white !important;
+}
+
+[role="option"] {
+  color: #1e293b !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+/* Hover state for dropdown items */
+[role="option"]:hover,
+[role="option"][data-highlighted="true"] {
+  background-color: #f8fafc !important;
+  color: #4f46e5 !important;
+}
+
+/* Selected state for dropdown items */
+[role="option"][data-state="checked"] {
+  background-color: #f5f3ff !important;
+  color: #4f46e5 !important;
+}
+
+/* Fix the checkmark color */
+[data-radix-select-item-indicator] svg {
+  color: #4f46e5 !important;
+}
+
+/* Fix dropdown positioning */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Remove duplicate/conflicting dropdown styles */
+.dropdown-content, .select-content {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0.5rem !important;
+}
+
+.dropdown-item {
+  color: #1e293b !important;
+}
+
+/* Ensure proper styling for any remaining dropdown elements */
+.dropdown-item:hover,
+.dropdown-item[data-highlighted="true"] {
+  background-color: #f8fafc !important;
+  color: #4f46e5 !important;
+}
+
+/* Premium input styling update */
+.premium-input {
+  @apply bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300;
+  color: #1a202c !important;
+  width: 100% !important;
+}
+
+/* Export button styling to match the purple button in the screenshot */
+.export-button {
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  border-radius: 0.5rem;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.export-button:hover {
+  background: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%);
+  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+
+.export-button:disabled {
+  background: linear-gradient(90deg, #9ca3af, #d1d5db);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* Improved dropdown styling for better visibility */
+.visible-dropdown {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+  z-index: 9999 !important;
+}
+
+.dropdown-item {
+  color: #1e293b !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  padding: 0.625rem 1rem !important;
+}
+
+/* Hover state */
+.dropdown-item:hover,
+[role="option"][data-highlighted="true"] {
+  background-color: #f5f7fa !important;
+  color: #4f46e5 !important;
+}
+
+/* Selected state */
+[role="option"][data-state="checked"] {
+  background-color: #eef2ff !important;
+  color: #4f46e5 !important;
+  font-weight: 600 !important;
+}
+
+/* Checkmark styling */
+[data-radix-select-item-indicator] svg {
+  color: #4f46e5 !important;
+  height: 1rem !important;
+  width: 1rem !important;
+}
+
+/* Fix dropdown positioning and rendering */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Animation for dropdown opening */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.visible-dropdown {
+  animation: fadeIn 0.2s ease-out;
+}
