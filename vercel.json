@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "buildCommand": "npm run build:vercel"
+      }
+    }
+  ],
+  "env": {
+    "ROLLUP_NATIVE": "false"
+  }
+}

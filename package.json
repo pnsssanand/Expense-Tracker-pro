@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "NODE_OPTIONS='--max_old_space_size=4096' ROLLUP_NATIVE=false vite build",
     "build:dev": "vite build --mode development",
+    "build:vercel": "ROLLUP_NATIVE=false vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
