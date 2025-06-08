@@ -1,12 +1,27 @@
-/* 
- * This file uses Tailwind CSS directives which are processed by PostCSS.
- * VS Code may show warnings for @tailwind and @apply directives - these can be safely ignored.
- * If warnings are bothersome, consider installing a CSS/PostCSS/Tailwind CSS extension for your editor.
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Import the main global styles */
+@import './styles/globals.css';
+
+/**
+ * IMPORTANT NOTICE ABOUT CSS WARNINGS:
+ * 
+ * VS Code shows warnings for Tailwind directives like @tailwind, @apply, @layer, etc.
+ * These warnings are ONLY EDITOR WARNINGS and can be safely ignored.
+ * The code will work correctly when processed by PostCSS and Tailwind.
+ * 
+ * To eliminate these warnings, we've added a .vscode/settings.json file that:
+ * - Disables CSS validation
+ * - Associates CSS files with PostCSS
+ * 
+ * If you still see warnings, restart VS Code or install the
+ * "Tailwind CSS IntelliSense" extension.
+ * 
+ * Created by Rajana Swathi from Dream Team
  */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   :root {
@@ -261,6 +276,20 @@
   
   .transaction-amount.expense {
     color: #f87171 !important;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  white-space: nowrap;
+}
+/* wrap overflow on small screens */
+@layer utilities {
+  .overflow-x-auto {
+    overflow-x: auto;
   }
 }
 

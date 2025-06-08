@@ -8,7 +8,7 @@ import {
   Search, Filter, Download, Edit, Trash2, CreditCard, 
   Smartphone, Banknote, PlusCircle, Receipt, Utensils, 
   Car, Film, Heart, Tag, Briefcase, AlertCircle, X,
-  ArrowDownCircle, ArrowUpCircle, CalendarRange
+  ArrowDownCircle, ArrowUpCircle, CalendarRange, ChevronRight
 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc, Timestamp, getDoc, increment, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
@@ -29,6 +29,9 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+// Make sure useIsMobile is imported if you plan to use it for more complex logic,
+// otherwise Tailwind's md:hidden etc. are fine.
+// import { useIsMobile } from '@/hooks/use-mobile';
 
 export const TransactionSheet = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -380,50 +383,66 @@ export const TransactionSheet = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Payment Method Breakdown Card */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="text-gray-900 font-display flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-blue-600" />
+    <div className="space-y-4 md:space-y-6 mb-16 md:mb-0">
+      {/* Mobile-friendly Add Transaction button that's fixed at the bottom */}
+      <div className="fixed bottom-4 inset-x-0 flex justify-center md:hidden z-50">
+        <Button 
+          onClick={() => window.dispatchEvent(new CustomEvent('open-add-transaction'))}
+          className="px-6 py-2 h-12 text-base font-medium rounded-full shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 flex items-center"
+        >
+          <PlusCircle className="h-5 w-5 mr-2" />
+          Add Transaction
+        </Button>
+      </div>
+
+      {/* Payment Method Breakdown Card - Mobile Optimized */}
+      <Card className="glass-card rounded-xl shadow-md overflow-hidden">
+        <CardHeader className="py-3 px-4 md:p-6">
+          <CardTitle className="text-gray-900 font-display flex items-center gap-2 text-base md:text-lg">
+            <Receipt className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
             Payment Method Breakdown
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-4 md:px-6 md:pb-6">
           {!hasPaymentData ? (
-            <div className="text-center py-8">
-              <CreditCard className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Spending Data Yet</h3>
-              <p className="text-gray-600 max-w-md mx-auto">
+            <div className="text-center py-6 md:py-8">
+              <CreditCard className="mx-auto h-10 w-10 md:h-12 md:w-12 text-gray-400 mb-3 md:mb-4" />
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-1 md:mb-2">No Spending Data Yet</h3>
+              <p className="text-sm md:text-base text-gray-600 max-w-md mx-auto px-4">
                 Add your expenses with payment methods to see spending breakdown by payment type.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {/* Mobile-friendly payment breakdown list */}
+              <div className="space-y-2 md:space-y-3">
                 {Object.entries(paymentBreakdown).map(([method, amount]) => (
-                  <div key={method} className="flex items-center justify-between">
+                  <div key={method} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
                     <div className="flex items-center gap-2">
-                      {getPaymentIcon(method)}
-                      <span className="text-gray-900 capitalize">{method}</span>
+                      <div className="p-1.5 rounded-md" style={{
+                        backgroundColor: getPaymentMethodColor(method) + '20'
+                      }}>
+                        {getPaymentIcon(method)}
+                      </div>
+                      <span className="text-gray-900 capitalize text-sm md:text-base">{method}</span>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-gray-900 font-bold">₹{amount.toFixed(2)}</span>
-                      <span className="text-gray-600 text-sm">
+                      <span className="text-gray-900 font-bold text-sm md:text-base">₹{amount.toFixed(2)}</span>
+                      <span className="text-gray-600 text-xs">
                         {((amount / totalSpending) * 100).toFixed(1)}%
                       </span>
                     </div>
                   </div>
                 ))}
-                <div className="pt-2 border-t border-gray-300 flex justify-between">
+                <div className="pt-2 border-t border-gray-300 flex justify-between p-2">
                   <span className="text-gray-900 font-medium">Total Spending</span>
                   <span className="text-gray-900 font-bold">₹{totalSpending.toFixed(2)}</span>
                 </div>
               </div>
               
-              {/* Keep the chart as-is */}
-              <div className="flex items-center justify-center">
-                <div className="relative w-40 h-40">
+              {/* Responsive chart */}
+              <div className="flex items-center justify-center mt-2 md:mt-0">
+                <div className="relative w-28 h-28 md:w-40 md:h-40">
                   {/* Progress Ring Chart */}
                   {Object.entries(paymentBreakdown).map(([method, amount], index) => {
                     const percentage = amount / totalSpending;
@@ -475,148 +494,152 @@ export const TransactionSheet = () => {
         </CardContent>
       </Card>
 
-      {/* Enhanced Transaction Filters */}
-      <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
-        <CardHeader className="border-b border-gray-100 pb-4">
+      {/* Enhanced Transaction Filters - Mobile-friendly collapsible design */}
+      <Card className="bg-white shadow-md rounded-xl border border-gray-100">
+        <CardHeader className="border-b border-gray-100 py-3 px-4 md:p-6">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-gray-800 font-display flex items-center gap-2">
-              <Filter className="w-5 h-5 text-indigo-600" />
-              Filter Transactions
+            <CardTitle className="text-gray-800 font-display flex items-center gap-2 text-base md:text-lg">
+              <Filter className="w-4 h-4 md:w-5 md:h-5 text-indigo-600" />
+              Filters
               {activeFilters > 0 && (
-                <span className="bg-indigo-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                <span className="bg-indigo-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {activeFilters}
                 </span>
               )}
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex gap-1 md:gap-2">
               {activeFilters > 0 && (
                 <Button 
                   variant="ghost" 
-                  size="sm" 
+                  size="sm"
                   onClick={clearAllFilters}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-xs md:text-sm text-gray-600 hover:text-gray-900 h-8"
                 >
-                  Clear filters
+                  Clear
                 </Button>
               )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-xs md:text-sm text-gray-600 hover:text-gray-900 h-8 flex items-center"
               >
-                {showFilters ? "Hide options" : "Show options"}
+                {showFilters ? "Hide" : "Show"}
+                <ChevronRight className={`ml-1 w-4 h-4 transition-transform duration-200 ${showFilters ? 'rotate-90' : ''}`} />
               </Button>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className={showFilters ? "py-4" : "py-0 h-0 overflow-hidden"}>
-          <div className="space-y-6">
-            {/* Quick filters */}
+        {/* Filter content - animated height transition for mobile */}
+        <CardContent className={`transition-all duration-300 ease-in-out ${
+          showFilters ? "py-3 px-4 md:p-6" : "py-0 px-4 h-0 overflow-hidden"
+        }`}>
+          <div className="space-y-4 md:space-y-6">
+            {/* Quick search - mobile optimized */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Search</h3>
+              <h3 className="text-xs md:text-sm font-medium text-gray-700 mb-2">Quick Search</h3>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3.5 w-3.5 md:h-4 md:w-4" />
                 <Input
-                  placeholder="Search by purpose, category, or notes..."
+                  placeholder="Search transactions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-gray-50 border-gray-200 focus:border-indigo-500 rounded-lg"
+                  className="pl-9 bg-gray-50 border-gray-200 focus:border-indigo-500 rounded-lg text-sm h-9 md:h-10"
                 />
                 {searchTerm && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full text-gray-400 hover:text-gray-600"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
                     onClick={() => setSearchTerm('')}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   </Button>
                 )}
               </div>
             </div>
 
-            {/* Advanced filters */}
+            {/* Mobile-friendly filter options with responsive grid */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Advanced Filters</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <h3 className="text-xs md:text-sm font-medium text-gray-700 mb-2">Filters</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {/* Transaction Type Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-600">Type</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">Type</label>
                   <Select value={transactionType} onValueChange={setTransactionType}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 rounded-lg">
+                    <SelectTrigger className="bg-gray-50 border-gray-200 rounded-lg h-9 text-xs">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
-                    <SelectContent position="item-aligned" sideOffset={5} align="start">
+                    <SelectContent className="text-xs">
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="expense" className="flex items-center gap-2">
-                        <ArrowDownCircle className="h-3.5 w-3.5 text-red-500" />
+                      <SelectItem value="expense" className="flex items-center gap-1.5">
+                        <ArrowDownCircle className="h-3 w-3 text-red-500" />
                         <span>Expenses</span>
                       </SelectItem>
-                      <SelectItem value="income" className="flex items-center gap-2">
-                        <ArrowUpCircle className="h-3.5 w-3.5 text-green-500" />
+                      <SelectItem value="income" className="flex items-center gap-1.5">
+                        <ArrowUpCircle className="h-3 w-3 text-green-500" />
                         <span>Income</span>
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Category filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-600">Category</label>
+                {/* Other filters - concise UI for mobile */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">Category</label>
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="modern-input">
+                    <SelectTrigger className="bg-gray-50 border-gray-200 rounded-lg h-9 text-xs">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
-                    <SelectContent className="visible-dropdown">
-                      <SelectItem value="all" className="dropdown-item">All Categories</SelectItem>
-                      <SelectItem value="food & dining" className="dropdown-item">Food & Dining</SelectItem>
-                      <SelectItem value="transportation" className="dropdown-item">Transportation</SelectItem>
-                      <SelectItem value="entertainment" className="dropdown-item">Entertainment</SelectItem>
-                      <SelectItem value="healthcare" className="dropdown-item">Healthcare</SelectItem>
-                      <SelectItem value="salary" className="dropdown-item">Salary</SelectItem>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="food & dining">Food & Dining</SelectItem>
+                      <SelectItem value="transportation">Transportation</SelectItem>
+                      <SelectItem value="entertainment">Entertainment</SelectItem>
+                      <SelectItem value="healthcare">Healthcare</SelectItem>
+                      <SelectItem value="salary">Salary</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Payment Method filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-600">Payment Method</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">Payment</label>
                   <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                    <SelectTrigger className="modern-input">
+                    <SelectTrigger className="bg-gray-50 border-gray-200 rounded-lg h-9 text-xs">
                       <SelectValue placeholder="All Methods" />
                     </SelectTrigger>
-                    <SelectContent className="visible-dropdown">
-                      <SelectItem value="all" className="dropdown-item">All Methods</SelectItem>
-                      <SelectItem value="cash" className="dropdown-item">Cash</SelectItem>
-                      <SelectItem value="phonepe" className="dropdown-item">PhonePe</SelectItem>
-                      <SelectItem value="paytm" className="dropdown-item">Paytm</SelectItem>
-                      <SelectItem value="card" className="dropdown-item">Card</SelectItem>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="all">All Methods</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="phonepe">PhonePe</SelectItem>
+                      <SelectItem value="paytm">Paytm</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 {/* Date Range filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-600">Date Range</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">Date</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="bg-gray-50 border-gray-200 rounded-lg w-full justify-start text-left font-normal"
+                        className="bg-gray-50 border-gray-200 rounded-lg w-full justify-start text-left text-xs h-9 px-3"
                       >
-                        <CalendarRange className="mr-2 h-4 w-4 text-gray-500" />
+                        <CalendarRange className="mr-1 h-3 w-3 text-gray-500" />
                         {dateRange.from ? (
                           dateRange.to ? (
-                            <>
-                              {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d, yyyy")}
-                            </>
+                            <span className="truncate">
+                              {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d")}
+                            </span>
                           ) : (
-                            format(dateRange.from, "MMM d, yyyy")
+                            format(dateRange.from, "MMM d")
                           )
                         ) : (
-                          "Select date range"
+                          "Select dates"
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -626,18 +649,21 @@ export const TransactionSheet = () => {
                         selected={dateRange}
                         onSelect={setDateRange}
                         initialFocus
+                        className="rounded-md"
                       />
-                      <div className="p-2 border-t border-gray-200 flex justify-between">
+                      <div className="flex justify-between p-2 border-t border-gray-200">
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           onClick={() => setDateRange({ from: undefined, to: undefined })}
+                          className="text-xs h-7"
                         >
                           Clear
                         </Button>
                         <Button 
                           size="sm"
                           onClick={() => document.body.click()} // close the popover
+                          className="text-xs h-7"
                         >
                           Apply
                         </Button>
@@ -648,55 +674,56 @@ export const TransactionSheet = () => {
               </div>
             </div>
 
-            {/* Filter summary */}
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <div className="text-sm text-gray-600">
-                Showing <span className="font-medium text-gray-900">{filteredTransactions.length}</span> of {transactions.length} transactions
+            {/* Active filters - optimized for mobile display */}
+            {activeFilters > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {filterCategory !== 'all' && (
+                  <Badge variant="secondary" className="text-xs py-0.5 flex items-center gap-1">
+                    <span className="truncate max-w-[100px]">{filterCategory}</span>
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => setFilterCategory('all')} />
+                  </Badge>
+                )}
+                {filterPaymentMethod !== 'all' && (
+                  <Badge variant="secondary" className="text-xs py-0.5 flex items-center gap-1">
+                    <span className="truncate max-w-[100px]">{filterPaymentMethod}</span>
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => setFilterPaymentMethod('all')} />
+                  </Badge>
+                )}
+                {transactionType !== 'all' && (
+                  <Badge variant="secondary" className="text-xs py-0.5 flex items-center gap-1">
+                    {transactionType === 'expense' ? 'Expenses' : 'Income'}
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => setTransactionType('all')} />
+                  </Badge>
+                )}
+                {(dateRange.from || dateRange.to) && (
+                  <Badge variant="secondary" className="text-xs py-0.5 flex items-center gap-1">
+                    Date
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => setDateRange({ from: undefined, to: undefined })} />
+                  </Badge>
+                )}
+              </div>
+            )}
+            
+            {/* Filter results summary and export - mobile layout */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs text-gray-600">
+                <span className="font-medium text-gray-900">{filteredTransactions.length}</span> of {transactions.length}
               </div>
               
-              {activeFilters > 0 && (
-                <div className="flex flex-wrap gap-2 ml-auto">
-                  {filterCategory !== 'all' && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Category: {filterCategory}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => setFilterCategory('all')} />
-                    </Badge>
-                  )}
-                  {filterPaymentMethod !== 'all' && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Payment: {filterPaymentMethod}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => setFilterPaymentMethod('all')} />
-                    </Badge>
-                  )}
-                  {transactionType !== 'all' && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Type: {transactionType === 'expense' ? 'Expenses' : 'Income'}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => setTransactionType('all')} />
-                    </Badge>
-                  )}
-                  {(dateRange.from || dateRange.to) && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Date Filter
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => setDateRange({ from: undefined, to: undefined })} />
-                    </Badge>
-                  )}
-                </div>
-              )}
-              
               <Button 
-                className="ml-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md rounded-lg transition-all" 
+                className="text-xs py-1.5 px-3 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-sm rounded-lg" 
                 disabled={filteredTransactions.length === 0 || isExporting}
                 onClick={handleExport}
               >
                 {isExporting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1.5" />
                     Exporting...
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
+                    <Download className="w-3.5 h-3.5 mr-1.5" />
+                    Export
                   </>
                 )}
               </Button>
@@ -705,182 +732,282 @@ export const TransactionSheet = () => {
         </CardContent>
       </Card>
 
-      {/* Transactions Table */}
+      {/* Transactions List - Card view optimized for mobile */}
       <Card className="bg-white shadow-md rounded-xl border border-gray-100">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-gray-800 font-display">Transaction History</CardTitle>
-          {transactions.length > 0 && (
+        <CardHeader className="flex flex-row items-center justify-between py-3 px-4 md:p-6">
+          <CardTitle className="text-gray-800 font-display text-base md:text-lg">Transactions</CardTitle>
+          <div className="flex items-center">
+            {/* Desktop Add Transaction button */}
             <Button 
               variant="outline" 
               size="sm" 
-              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-              onClick={() => setIsDeleteDialogOpen(true)}
+              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 hidden md:flex"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-add-transaction'))}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete All
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Add Transaction
             </Button>
-          )}
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex flex-col justify-center items-center py-16 bg-white/5">
-              <div className="w-12 h-12 relative">
-                <div className="absolute inset-0 rounded-full border-t-2 border-white/20 animate-spin"></div>
-                <div className="absolute inset-0 rounded-full border-l-2 border-blue-500 animate-spin"></div>
-              </div>
-              <p className="mt-4 text-white/60 text-sm">Loading your transactions...</p>
-            </div>
-          ) : transactions.length === 0 ? (
-            <div className="text-center py-16 bg-white/5">
-              <div className="p-4 rounded-full bg-white/5 inline-flex mb-4">
-                <PlusCircle className="mx-auto h-12 w-12 text-white/30" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">No Transactions Yet</h3>
-              <p className="text-white/70 max-w-md mx-auto px-6">
-                You haven't added any transactions yet. Start tracking your expenses by adding your first transaction.
-              </p>
+            
+            {transactions.length > 0 && (
               <Button 
                 variant="outline" 
-                className="mt-6 border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-add-transaction'))}
+                size="sm" 
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 text-xs h-8"
+                onClick={() => setIsDeleteDialogOpen(true)}
               >
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Add Your First Transaction
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                <span className="hidden md:inline">Delete All</span>
               </Button>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex flex-col justify-center items-center py-12">
+              <div className="w-8 h-8 md:w-12 md:h-12 border-2 border-t-indigo-500 border-indigo-200 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-500 text-sm">Loading transactions...</p>
+            </div>
+          ) : transactions.length === 0 ? (
+            <div className="text-center py-10 md:py-16 px-4">
+              <div className="p-3 rounded-full bg-indigo-50 inline-flex mb-4">
+                <PlusCircle className="mx-auto h-8 w-8 md:h-10 md:w-10 text-indigo-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">No Transactions Yet</h3>
+              <p className="text-sm text-gray-500 max-w-md mx-auto mb-4">
+                Add your first transaction to start tracking your expenses.
+              </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-white/10 bg-white/5">
-                    <TableHead className="text-white/80 font-semibold">Date</TableHead>
-                    <TableHead className="text-white/80 font-semibold">Purpose</TableHead>
-                    <TableHead className="text-white/80 font-semibold">Category</TableHead>
-                    <TableHead className="text-white/80 font-semibold">Payment Method</TableHead>
-                    <TableHead className="text-white/80 font-semibold">Amount</TableHead>
-                    <TableHead className="text-white/80 font-semibold text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-white/60">
-                        No transactions match your current filters
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredTransactions.map((transaction) => (
-                      <TableRow 
-                        key={transaction.id} 
-                        className="border-white/10 backdrop-blur-sm transition-colors"
-                      >
-                        <TableCell className="text-white/90 font-medium">
-                          <div className="flex flex-col">
-                            <span>{new Date(transaction.date).toLocaleDateString('en-US', {day: 'numeric', month: 'short'})}</span>
-                            <span className="text-xs text-white/50">{new Date(transaction.date).toLocaleDateString('en-US', {year: 'numeric'})}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
+            <>
+              {/* Mobile transaction cards */}
+              <div className="md:hidden">
+                {filteredTransactions.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    No transactions match your filters
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {filteredTransactions.map((transaction) => (
+                      <div key={transaction.id} className="p-3 hover:bg-gray-50 transition-colors">
+                        <div className="flex justify-between items-start mb-1.5">
                           <div>
-                            <p className="text-white font-medium">{transaction.purpose}</p>
-                            {transaction.notes && (
-                              <p className="text-white/60 text-sm line-clamp-1">{transaction.notes}</p>
-                            )}
+                            <p className="text-gray-800 font-medium text-sm line-clamp-1">{transaction.purpose}</p>
+                            <p className="text-gray-500 text-xs">
+                              {new Date(transaction.date.toDate()).toLocaleDateString('en-US', {
+                                day: 'numeric', month: 'short', year: 'numeric'
+                              })}
+                            </p>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white backdrop-blur-sm border border-white/5">
-                              {getCategoryIcon(transaction.category)}
-                              <span className="ml-1">{transaction.category}</span>
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-md" style={{
-                              backgroundColor: getPaymentMethodColor(transaction.paymentMethod) + '20'
-                            }}>
-                              {getPaymentIcon(transaction.paymentMethod)}
-                            </div>
-                            <span className="text-white/90">{transaction.paymentMethod}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`font-bold ${
-                            transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                          <span className={`font-semibold text-sm ${
+                            transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            <div className="flex items-center">
-                              <span className="w-1.5 h-1.5 rounded-full mr-1.5" 
-                                style={{
-                                  backgroundColor: transaction.type === 'income' ? '#34D399' : '#F87171'
-                                }}
-                              ></span>
-                              {transaction.type === 'income' ? '+' : '-'}₹{parseFloat(transaction.amount).toFixed(2)}
-                            </div>
+                            {transaction.type === 'income' ? '+' : '-'}₹{parseFloat(transaction.amount).toFixed(2)}
                           </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                        </div>
+                        
+                        <div className="flex justify-between items-center mt-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 max-w-[120px]">
+                              {getCategoryIcon(transaction.category)}
+                              <span className="ml-1 truncate">{transaction.category}</span>
+                            </span>
+                            
+                            <div className="flex items-center">
+                              <div className="p-1 rounded-md" style={{
+                                backgroundColor: getPaymentMethodColor(transaction.paymentMethod) + '20'
+                              }}>
+                                {getPaymentIcon(transaction.paymentMethod)}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center">
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="rounded-full h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+                              className="rounded-full h-7 w-7 text-gray-500 hover:text-indigo-600"
                               onClick={() => handleEditTransaction(transaction)}
                             >
-                              <Edit className="w-4 h-4" />
-                              <span className="sr-only">Edit</span>
+                              <Edit className="w-3.5 h-3.5" />
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="rounded-full h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                              className="rounded-full h-7 w-7 text-red-500 hover:text-red-600"
                               onClick={() => setDeletingTransactionId(transaction.id)}
                             >
-                              <Trash2 className="w-4 h-4" />
-                              <span className="sr-only">Delete</span>
+                              <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Mobile pagination */}
+                {filteredTransactions.length > 0 && (
+                  <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-gray-50">
+                    <span className="text-xs text-gray-600">
+                      {filteredTransactions.length} transactions
+                    </span>
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs px-2 py-0.5 h-7"
+                        disabled
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs px-2 py-0.5 h-7"
+                        disabled
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Desktop table view */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-gray-200 bg-gray-50">
+                      <TableHead className="text-gray-600 font-semibold">Date</TableHead>
+                      <TableHead className="text-gray-600 font-semibold">Purpose</TableHead>
+                      <TableHead className="text-gray-600 font-semibold">Category</TableHead>
+                      <TableHead className="text-gray-600 font-semibold">Payment Method</TableHead>
+                      <TableHead className="text-gray-600 font-semibold">Amount</TableHead>
+                      <TableHead className="text-gray-600 font-semibold text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          No transactions match your current filters.
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-              
-              {filteredTransactions.length > 0 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
-                  <div className="text-sm text-white/60">
-                    Showing <span className="font-medium text-white">{filteredTransactions.length}</span> transactions
+                    ) : (
+                      filteredTransactions.map((transaction) => (
+                        <TableRow 
+                          key={transaction.id} 
+                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <TableCell className="text-gray-700 font-medium">
+                            <div className="flex flex-col">
+                              <span>{new Date(transaction.date.toDate()).toLocaleDateString('en-US', {day: 'numeric', month: 'short'})}</span>
+                              <span className="text-xs text-gray-500">{new Date(transaction.date.toDate()).toLocaleDateString('en-US', {year: 'numeric'})}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="text-gray-800 font-medium">{transaction.purpose}</p>
+                              {transaction.notes && (
+                                <p className="text-gray-500 text-sm line-clamp-1">{transaction.notes}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                                {getCategoryIcon(transaction.category)}
+                                <span className="ml-1">{transaction.category}</span>
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded-md" style={{
+                                backgroundColor: getPaymentMethodColor(transaction.paymentMethod) + '20' // Keep for dynamic color
+                              }}>
+                                {getPaymentIcon(transaction.paymentMethod)}
+                              </div>
+                              <span className="text-gray-700">{transaction.paymentMethod}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-bold ${
+                              transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              <div className="flex items-center">
+                                <span className="w-1.5 h-1.5 rounded-full mr-1.5" 
+                                  style={{
+                                    backgroundColor: transaction.type === 'income' ? '#10B981' : '#EF4444' // Tailwind green-500 and red-500
+                                  }}
+                                ></span>
+                                {transaction.type === 'income' ? '+' : '-'}₹{parseFloat(transaction.amount).toFixed(2)}
+                              </div>
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="rounded-full h-8 w-8 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
+                                onClick={() => handleEditTransaction(transaction)}
+                              >
+                                <Edit className="w-4 h-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="rounded-full h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => setDeletingTransactionId(transaction.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+                
+                {filteredTransactions.length > 0 && (
+                  <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+                    <div className="text-sm text-gray-600 mb-2 md:mb-0">
+                      Showing <span className="font-medium text-gray-800">{filteredTransactions.length}</span> transactions
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs px-3"
+                        disabled
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs px-3" 
+                        disabled
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-white/10 bg-white/5 text-white hover:bg-white/10 text-xs px-3"
-                      disabled
-                    >
-                      Previous
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-white/10 bg-white/5 text-white hover:bg-white/10 text-xs px-3"
-                      disabled
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingTransactionId} onOpenChange={(open) => !open && setDeletingTransactionId(null)}>
-        <AlertDialogContent className="bg-white text-gray-800 border border-gray-200">
+        <AlertDialogContent className="bg-white text-gray-800 border border-gray-200 max-w-[90%] md:max-w-md p-4 md:p-6 rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-gray-900 flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-red-500" />
@@ -953,22 +1080,33 @@ export const TransactionSheet = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add a footer to TransactionSheet view as well */}
+      <footer className="bg-white py-4 border-t border-gray-200 rounded-lg shadow-sm mt-6">
+        <div className="text-center text-sm text-gray-500">
+          <p>
+            <span>Designed and Developed by</span>
+            <span className="font-medium text-indigo-600 ml-1">Mr. Anand Pinisetty</span>
+          </p>
+          <p className="text-xs mt-1 text-gray-400">Expense Tracker — Smart financial tracking</p>
+        </div>
+      </footer>
     </div>
   );
 };
 
 // Helper functions to add category icons and payment method colors
 const getCategoryIcon = (category: string) => {
-  const categoryIcons = {
-    'food & dining': <Utensils className="w-3 h-3 text-orange-400" />,
-    'transportation': <Car className="w-3 h-3 text-blue-400" />,
-    'entertainment': <Film className="w-3 h-3 text-purple-400" />,
-    'healthcare': <Heart className="w-3 h-3 text-pink-400" />,
-    'salary': <Briefcase className="w-3 h-3 text-green-400" />,
+  const categoryIcons: { [key: string]: JSX.Element } = { // Added type for categoryIcons
+    'food & dining': <Utensils className="w-3 h-3 text-orange-500" />, // Adjusted colors for light theme
+    'transportation': <Car className="w-3 h-3 text-blue-500" />,
+    'entertainment': <Film className="w-3 h-3 text-purple-500" />,
+    'healthcare': <Heart className="w-3 h-3 text-pink-500" />,
+    'salary': <Briefcase className="w-3 h-3 text-green-500" />,
     // Add more category icons as needed
   };
   
-  return categoryIcons[category?.toLowerCase()] || <Tag className="w-3 h-3 text-gray-400" />;
+  return categoryIcons[category?.toLowerCase()] || <Tag className="w-3 h-3 text-gray-500" />;
 };
 
 const getPaymentMethodColor = (method: string) => {

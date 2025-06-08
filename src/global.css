@@ -1,0 +1,42 @@
+/* Add to your existing global styles */
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve touch areas */
+  button, 
+  [role="button"], 
+  .clickable {
+    min-height: 44px; /* Apple's recommended minimum touch target size */
+  }
+  
+  /* Mobile form inputs */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Fix for iOS Safari's 100vh issue */
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Custom styles for mobile components */
+.mobile-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth mobile transitions */
+.mobile-transition {
+  transition: all 0.3s ease;
+}
+
+/* Bottom safe area for iOS */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}

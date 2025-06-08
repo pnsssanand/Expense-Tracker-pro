@@ -1,426 +1,520 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
-import { motion } from "framer-motion";
 import { 
-  ShoppingBag, Utensils, Car, Home, Plane, Gift, Coffee, 
-  BookOpen, FilmIcon, HeartPulse, MonitorSmartphone, CreditCard, 
-  Wallet as WalletIcon, Smartphone, Banknote, BriefcaseBusiness, 
-  BadgeDollarSign, Landmark, ArrowDownCircle, ArrowUpCircle,
-  Receipt, CalendarIcon
+  Utensils, Car, Film, Heart, Home, Briefcase, Gift, 
+  Book, Coffee, Laptop, FileText, ShoppingBag,
+  Banknote, CreditCard, Smartphone, Building, X
 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from '@/hooks/use-toast';
+import { db, auth } from '@/lib/firebase';
+import { doc, updateDoc, getDoc, increment, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
-// Category definitions with icons
-const expenseCategories = [
-  { id: 'food_dining', name: 'Food & Dining', icon: Utensils, color: '#E53935' },
-  { id: 'transportation', name: 'Transportation', icon: Car, color: '#1E88E5' },
-  { id: 'shopping', name: 'Shopping', icon: ShoppingBag, color: '#FF8F00' },
-  { id: 'housing', name: 'Housing', icon: Home, color: '#43A047' },
-  { id: 'travel', name: 'Travel', icon: Plane, color: '#8E24AA' },
-  { id: 'entertainment', name: 'Entertainment', icon: FilmIcon, color: '#F4511E' },
-  { id: 'education', name: 'Education', icon: BookOpen, color: '#3949AB' },
-  { id: 'healthcare', name: 'Healthcare', icon: HeartPulse, color: '#D81B60' },
-  { id: 'gifts', name: 'Gifts', icon: Gift, color: '#FFA000' },
-  { id: 'tech', name: 'Tech', icon: MonitorSmartphone, color: '#00ACC1' },
-  { id: 'coffee', name: 'Coffee & Tea', icon: Coffee, color: '#6D4C41' },
-  { id: 'other_expense', name: 'Other', icon: Receipt, color: '#546E7A' }
+// Category icons array with proper data structure - enhanced with colors for better visibility
+const categories = [
+  { id: 'food-dining', name: 'Food & Dining', icon: <Utensils className="h-5 w-5" />, color: 'orange' },
+  { id: 'transportation', name: 'Transportation', icon: <Car className="h-5 w-5" />, color: 'blue' },
+  { id: 'shopping', name: 'Shopping', icon: <ShoppingBag className="h-5 w-5" />, color: 'pink' },
+  { id: 'housing', name: 'Housing', icon: <Home className="h-5 w-5" />, color: 'green' },
+  { id: 'travel', name: 'Travel', icon: <Briefcase className="h-5 w-5" />, color: 'purple' },
+  { id: 'entertainment', name: 'Entertainment', icon: <Film className="h-5 w-5" />, color: 'red' },
+  { id: 'education', name: 'Education', icon: <Book className="h-5 w-5" />, color: 'cyan' },
+  { id: 'healthcare', name: 'Healthcare', icon: <Heart className="h-5 w-5" />, color: 'rose' },
+  { id: 'gifts', name: 'Gifts', icon: <Gift className="h-5 w-5" />, color: 'yellow' },
+  { id: 'tech', name: 'Tech', icon: <Laptop className="h-5 w-5" />, color: 'indigo' },
+  { id: 'coffee-tea', name: 'Coffee & Tea', icon: <Coffee className="h-5 w-5" />, color: 'amber' },
+  { id: 'other', name: 'Other', icon: <FileText className="h-5 w-5" />, color: 'gray' }
 ];
 
-const incomeCategories = [
-  { id: 'salary', name: 'Salary', icon: BriefcaseBusiness, color: '#00897B' },
-  { id: 'freelance', name: 'Freelance', icon: BadgeDollarSign, color: '#039BE5' },
-  { id: 'investments', name: 'Investments', icon: Landmark, color: '#43A047' },
-  { id: 'gifts', name: 'Gifts', icon: Gift, color: '#7E57C2' },
-  { id: 'other_income', name: 'Other', icon: Receipt, color: '#546E7A' }
-];
-
+// Payment methods array with proper data structure
 const paymentMethods = [
-  { id: 'cash', name: 'Cash', icon: Banknote, color: '#43A047' },
-  { id: 'phonepe', name: 'PhonePe', icon: Smartphone, color: '#673AB7' }, 
-  { id: 'paytm', name: 'Paytm', icon: Smartphone, color: '#2196F3' },
-  { id: 'card', name: 'Debit/Credit Card', icon: CreditCard, color: '#FF5722' },
-  { id: 'bank', name: 'Bank Transfer', icon: Landmark, color: '#1976D2' },
-  { id: 'other_payment', name: 'Other', icon: WalletIcon, color: '#546E7A' }
+  { id: 'cash', name: 'Cash', icon: <Banknote className="h-5 w-5 text-green-500" /> },
+  { id: 'phonepe', name: 'PhonePe', icon: <Smartphone className="h-5 w-5 text-purple-500" /> },
+  { id: 'paytm', name: 'Paytm', icon: <Smartphone className="h-5 w-5 text-blue-500" /> },
+  { id: 'card', name: 'Debit/Credit Card', icon: <CreditCard className="h-5 w-5 text-orange-500" /> },
+  { id: 'bank-transfer', name: 'Bank Transfer', icon: <Building className="h-5 w-5 text-gray-500" /> },
+  { id: 'other', name: 'Other', icon: <FileText className="h-5 w-5 text-gray-500" /> }
 ];
 
-// Update the component props to accept transaction for editing
-export const AddTransactionModal = ({ 
-  isOpen, 
-  onClose, 
-  transactionToEdit = null,
-  onUpdate = null
+interface AddTransactionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  transactionToEdit?: any;
+  onUpdate?: (data: any) => Promise<void>;
+}
+
+export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+  isOpen,
+  onClose,
+  transactionToEdit,
+  onUpdate
 }) => {
-  const [isExpense, setIsExpense] = useState(true);
+  const isEditing = !!transactionToEdit;
+
+  // Form state
   const [purpose, setPurpose] = useState('');
   const [amount, setAmount] = useState('');
+  const [type, setType] = useState('expense');
   const [category, setCategory] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Determine if we're in edit mode
-  const isEditMode = !!transactionToEdit;
-
-  // Reset form when modal is opened or transactionToEdit changes
+  // Prefill form when editing
   useEffect(() => {
-    if (isOpen) {
-      if (transactionToEdit) {
-        // Populate form with transaction data for editing
-        setIsExpense(transactionToEdit.type === 'expense');
-        setPurpose(transactionToEdit.purpose || '');
-        setAmount(transactionToEdit.amount?.toString() || '');
-        setCategory(transactionToEdit.category || '');
-        setPaymentMethod(transactionToEdit.paymentMethod || '');
-        setDate(transactionToEdit.date || new Date().toISOString().split('T')[0]);
-        setNotes(transactionToEdit.notes || '');
-      } else {
-        // Reset for new transaction
-        setIsExpense(true);
-        setPurpose('');
-        setAmount('');
-        setCategory('');
-        setPaymentMethod('');
-        setDate(new Date().toISOString().split('T')[0]);
-        setNotes('');
-      }
-      setErrors({});
+    if (transactionToEdit) {
+      setPurpose(transactionToEdit.purpose || '');
+      setAmount(transactionToEdit.amount || '');
+      setType(transactionToEdit.type || 'expense');
+      setCategory(transactionToEdit.category || '');
+      setPaymentMethod(transactionToEdit.paymentMethod || '');
+      setDate(transactionToEdit.date || new Date().toISOString().split('T')[0]);
+      setNotes(transactionToEdit.notes || '');
+    } else {
+      // Reset form when not editing
+      setPurpose('');
+      setAmount('');
+      setType('expense');
+      setCategory('');
+      setPaymentMethod('');
+      setDate(new Date().toISOString().split('T')[0]);
+      setNotes('');
     }
-  }, [isOpen, transactionToEdit]);
+  }, [transactionToEdit]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!purpose.trim()) newErrors.purpose = 'Purpose is required';
-    if (!amount.trim()) {
-      newErrors.amount = 'Amount is required';
-    } else if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      newErrors.amount = 'Amount must be a positive number';
+  // Handle transaction creation
+  const handleAddTransaction = async () => {
+    // Form validation
+    if (!purpose.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter a purpose for the transaction.",
+        variant: "destructive",
+      });
+      return;
     }
-    if (!category) newErrors.category = 'Category is required';
-    if (!paymentMethod) newErrors.paymentMethod = 'Payment method is required';
-    if (!date) newErrors.date = 'Date is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid positive amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!category) {
+      toast({
+        title: "Missing category",
+        description: "Please select a category for the transaction.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!paymentMethod) {
+      toast({
+        title: "Missing payment method",
+        description: "Please select a payment method.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      setIsLoading(true);
-      const userId = auth.currentUser?.uid;
+      setIsSubmitting(true);
       
-      if (!userId) {
-        toast({
-          title: "Authentication error",
-          description: "Please log in again to continue.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (isEditMode && onUpdate) {
-        // For editing, call the update handler
+      // If editing, use update function
+      if (isEditing && onUpdate) {
         await onUpdate({
-          purpose: purpose.trim(),
+          purpose,
           amount,
+          type,
           category,
           paymentMethod,
           date,
-          notes: notes.trim(),
-          type: isExpense ? 'expense' : 'income',
-        });
-      } else {
-        // Add the transaction
-        await addDoc(collection(db, 'users', userId, 'transactions'), {
-          purpose: purpose.trim(),
-          amount: parseFloat(amount),
-          category,
-          paymentMethod,
-          date: new Date(date),
-          notes: notes.trim(),
-          type: isExpense ? 'expense' : 'income',
-          createdAt: serverTimestamp(),
+          notes
         });
         
-        // Update the current balance
-        const financialDocRef = doc(db, 'users', userId, 'financialProfile', 'stats');
-        const financialDoc = await getDoc(financialDocRef);
+        toast({
+          title: "Transaction updated",
+          description: "Your transaction has been updated successfully.",
+        });
         
-        if (financialDoc.exists()) {
-          const currentBalance = financialDoc.data().totalBalance || 0;
-          const amountValue = parseFloat(amount);
-          
-          // Subtract for expense, add for income
-          const newBalance = isExpense 
-            ? currentBalance - amountValue 
-            : currentBalance + amountValue;
-          
-          await updateDoc(financialDocRef, {
-            totalBalance: newBalance,
-            updatedAt: serverTimestamp()
-          });
+        onClose();
+        return;
+      }
+      
+      // Otherwise create new transaction
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+
+      // Add transaction to Firestore
+      const transactionData = {
+        purpose,
+        amount: parseFloat(amount),
+        type,
+        category,
+        paymentMethod,
+        date: new Date(date),
+        notes,
+        createdAt: serverTimestamp()
+      };
+      
+      // Add the transaction
+      await addDoc(collection(db, 'users', userId, 'transactions'), transactionData);
+      
+      // Update financial stats
+      const financialDocRef = doc(db, 'users', userId, 'financialProfile', 'stats');
+      const financialDocSnap = await getDoc(financialDocRef);
+      
+      // If financialProfile stats doc exists, update it
+      if (financialDocSnap.exists()) {
+        const updateData: any = {};
+        
+        if (type === 'expense') {
+          updateData.totalBalance = increment(-parseFloat(amount));
+          updateData.monthlyExpenses = increment(parseFloat(amount));
+        } else {
+          updateData.totalBalance = increment(parseFloat(amount));
+          updateData.monthlyIncome = increment(parseFloat(amount));
         }
+        
+        await updateDoc(financialDocRef, updateData);
       }
       
       toast({
-        title: "Success!",
-        description: `${isExpense ? 'Expense' : 'Income'} ${isEditMode ? 'updated' : 'added'} successfully.`,
+        title: "Transaction added",
+        description: "Your transaction has been added successfully.",
       });
       
+      // Reset and close the form
       onClose();
+      
     } catch (error) {
-      console.error('Error with transaction:', error);
+      console.error('Error adding transaction:', error);
       toast({
-        title: `Failed to ${isEditMode ? 'update' : 'add'} transaction`,
-        description: "An unexpected error occurred. Please try again.",
+        title: "Error",
+        description: "There was a problem adding your transaction. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const activeCategories = isExpense ? expenseCategories : incomeCategories;
+  // Format selected category name for display
+  const getSelectedCategoryName = () => {
+    const selectedCategory = categories.find(c => c.id === category || c.name.toLowerCase() === category.toLowerCase());
+    return selectedCategory ? selectedCategory.name : '';
+  };
   
+  // Format selected payment method name for display
+  const getSelectedPaymentMethodName = () => {
+    const selectedMethod = paymentMethods.find(m => m.id === paymentMethod || m.name.toLowerCase() === paymentMethod.toLowerCase());
+    return selectedMethod ? selectedMethod.name : '';
+  };
+
+  // Helper function to get color class based on category color
+  const getCategoryColorClass = (catId: string, isSelected: boolean) => {
+    const cat = categories.find(c => c.id === catId);
+    if (!cat) return '';
+    
+    const colorMap: {[key: string]: {bg: string, border: string, text: string}} = {
+      orange: {
+        bg: isSelected ? 'bg-orange-100' : 'bg-orange-50', 
+        border: isSelected ? 'border-orange-300' : 'border-orange-100',
+        text: 'text-orange-700'
+      },
+      blue: {
+        bg: isSelected ? 'bg-blue-100' : 'bg-blue-50', 
+        border: isSelected ? 'border-blue-300' : 'border-blue-100',
+        text: 'text-blue-700'
+      },
+      pink: {
+        bg: isSelected ? 'bg-pink-100' : 'bg-pink-50', 
+        border: isSelected ? 'border-pink-300' : 'border-pink-100',
+        text: 'text-pink-700'
+      },
+      green: {
+        bg: isSelected ? 'bg-green-100' : 'bg-green-50', 
+        border: isSelected ? 'border-green-300' : 'border-green-100',
+        text: 'text-green-700'
+      },
+      purple: {
+        bg: isSelected ? 'bg-purple-100' : 'bg-purple-50', 
+        border: isSelected ? 'border-purple-300' : 'border-purple-100',
+        text: 'text-purple-700'
+      },
+      red: {
+        bg: isSelected ? 'bg-red-100' : 'bg-red-50', 
+        border: isSelected ? 'border-red-300' : 'border-red-100',
+        text: 'text-red-700'
+      },
+      cyan: {
+        bg: isSelected ? 'bg-cyan-100' : 'bg-cyan-50', 
+        border: isSelected ? 'border-cyan-300' : 'border-cyan-100',
+        text: 'text-cyan-700'
+      },
+      rose: {
+        bg: isSelected ? 'bg-rose-100' : 'bg-rose-50', 
+        border: isSelected ? 'border-rose-300' : 'border-rose-100',
+        text: 'text-rose-700'
+      },
+      yellow: {
+        bg: isSelected ? 'bg-yellow-100' : 'bg-yellow-50', 
+        border: isSelected ? 'border-yellow-300' : 'border-yellow-100',
+        text: 'text-yellow-700'
+      },
+      indigo: {
+        bg: isSelected ? 'bg-indigo-100' : 'bg-indigo-50', 
+        border: isSelected ? 'border-indigo-300' : 'border-indigo-100',
+        text: 'text-indigo-700'
+      },
+      amber: {
+        bg: isSelected ? 'bg-amber-100' : 'bg-amber-50', 
+        border: isSelected ? 'border-amber-300' : 'border-amber-100',
+        text: 'text-amber-700'
+      },
+      gray: {
+        bg: isSelected ? 'bg-gray-100' : 'bg-gray-50', 
+        border: isSelected ? 'border-gray-300' : 'border-gray-100',
+        text: 'text-gray-700'
+      }
+    };
+    
+    return `${colorMap[cat.color].bg} ${colorMap[cat.color].border} ${colorMap[cat.color].text}`;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-white border border-gray-200 text-gray-800 shadow-xl rounded-xl">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className={cn(
-            "w-full h-2", 
-            isExpense ? "bg-gradient-to-r from-red-500 to-orange-400" : "bg-gradient-to-r from-emerald-500 to-teal-400"
-          )} />
-            
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-              {isExpense ? (
-                <ArrowDownCircle className="h-6 w-6 text-red-500" />
-              ) : (
-                <ArrowUpCircle className="h-6 w-6 text-emerald-500" />
-              )}
-              {isEditMode ? 'Edit' : 'Add'} {isExpense ? 'Expense' : 'Income'}
-            </DialogTitle>
-          </DialogHeader>
-            
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Transaction Type Switch */}
-            <div className="flex justify-center">
-              <div className="bg-gray-100 p-1 rounded-lg flex items-center w-full max-w-xs">
-                <Button 
-                  type="button"
-                  onClick={() => setIsExpense(true)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2", 
-                    isExpense 
-                      ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md" 
-                      : "bg-transparent text-gray-500 hover:text-gray-700"
-                  )}
-                >
-                  <ArrowDownCircle className="h-4 w-4" />
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-0 rounded-lg">
+        <DialogHeader className="p-4 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+          <DialogTitle className="text-lg font-semibold text-gray-900">
+            {isEditing ? 'Edit Transaction' : 'Add Transaction'}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="px-4 py-3 space-y-6">
+          {/* Transaction Type - Improved visibility */}
+          <div className="space-y-2">
+            <Label htmlFor="type" className="text-sm font-medium text-gray-700 block mb-1">Transaction Type</Label>
+            <RadioGroup 
+              value={type} 
+              onValueChange={setType}
+              className="flex flex-row space-x-2"
+            >
+              <div className={`flex flex-1 items-center justify-center gap-2 border-2 rounded-md p-3 cursor-pointer transition-all ${
+                type === 'expense' 
+                  ? 'bg-red-50 border-red-400 shadow-sm' 
+                  : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}>
+                <RadioGroupItem value="expense" id="expense" className="sr-only" />
+                <label htmlFor="expense" className="flex items-center gap-1.5 cursor-pointer w-full justify-center font-medium">
                   Expense
-                </Button>
-                <Button 
-                  type="button"
-                  onClick={() => setIsExpense(false)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2",
-                    !isExpense 
-                      ? "bg-gradient-to-r from-emerald-500 to-teal-400 text-white shadow-md" 
-                      : "bg-transparent text-gray-500 hover:text-gray-700"
-                  )}
-                >
-                  <ArrowUpCircle className="h-4 w-4" />
+                </label>
+              </div>
+              <div className={`flex flex-1 items-center justify-center gap-2 border-2 rounded-md p-3 cursor-pointer transition-all ${
+                type === 'income' 
+                  ? 'bg-green-50 border-green-400 shadow-sm' 
+                  : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}>
+                <RadioGroupItem value="income" id="income" className="sr-only" />
+                <label htmlFor="income" className="flex items-center gap-1.5 cursor-pointer w-full justify-center font-medium">
                   Income
+                </label>
+              </div>
+            </RadioGroup>
+          </div>
+          
+          {/* Description - Enhanced style */}
+          <div className="space-y-2">
+            <Label htmlFor="purpose" className="text-sm font-medium text-gray-700 block mb-1">Description</Label>
+            <Input
+              id="purpose"
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              placeholder="What was this transaction for?"
+              className="w-full border-gray-300 focus:border-indigo-500"
+            />
+          </div>
+          
+          {/* Amount - Enhanced style */}
+          <div className="space-y-2">
+            <Label htmlFor="amount" className="text-sm font-medium text-gray-700 block mb-1">Amount</Label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 font-medium">₹</span>
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                className="pl-7 w-full text-lg border-gray-300 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+          
+          {/* Date - Enhanced style */}
+          <div className="space-y-2">
+            <Label htmlFor="date" className="text-sm font-medium text-gray-700 block mb-1">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full border-gray-300 focus:border-indigo-500"
+            />
+          </div>
+          
+          {/* Category Selection - Completely redesigned for better visibility */}
+          <div className="space-y-3">
+            <Label htmlFor="category" className="text-sm font-medium text-gray-700 block">
+              Category
+            </Label>
+            {category && (
+              <div className="bg-indigo-50 p-2 rounded-md mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {categories.find(c => c.id === category || c.name.toLowerCase() === category.toLowerCase())?.icon}
+                  <span className="font-medium text-indigo-700">{getSelectedCategoryName()}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setCategory('')}
+                  className="h-7 w-7 p-0 rounded-full text-indigo-700 hover:bg-indigo-100"
+                >
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-
-            {/* Purpose & Amount */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="purpose" className="text-sm font-medium text-gray-700">
-                  Purpose
-                </Label>
-                <Input
-                  id="purpose"
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                  placeholder={isExpense ? "What did you spend on?" : "Source of income"}
-                  className={cn(
-                    "bg-gray-50 border-gray-200 focus:border-blue-500 text-gray-800 placeholder:text-gray-400",
-                    errors.purpose && "border-red-500 focus:border-red-500"
-                  )}
-                />
-                {errors.purpose && <p className="text-sm text-red-500">{errors.purpose}</p>}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
-                  Amount
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-500">₹</span>
-                  <Input
-                    id="amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className={cn(
-                      "bg-gray-50 border-gray-200 pl-7 focus:border-blue-500 text-gray-800 placeholder:text-gray-400",
-                      errors.amount && "border-red-500 focus:border-red-500"
-                    )}
-                  />
-                </div>
-                {errors.amount && <p className="text-sm text-red-500">{errors.amount}</p>}
-              </div>
-            </div>
-
-            {/* Categories */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700">
-                {isExpense ? "Expense Category" : "Income Category"}
-              </Label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {activeCategories.map((cat) => (
-                  <Button
-                    key={cat.id}
-                    type="button"
+            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {categories.map((cat) => {
+                const isSelected = category === cat.id || category === cat.name;
+                return (
+                  <div 
+                    key={cat.id} 
+                    className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      isSelected
+                        ? `${getCategoryColorClass(cat.id, true)} shadow-sm` 
+                        : `bg-white border-gray-200 hover:${getCategoryColorClass(cat.id, false)}`
+                    }`}
                     onClick={() => setCategory(cat.id)}
-                    className={cn(
-                      "flex flex-col items-center justify-center h-20 gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 p-2 transition-all",
-                      category === cat.id && `ring-2 ring-${cat.color.replace('#', '')} border-transparent shadow-md`
-                    )}
                   >
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center" 
-                      style={{ backgroundColor: cat.color + '20' }}
-                    >
-                      <cat.icon className="h-5 w-5" style={{ color: cat.color }} />
+                    <div className={`p-2 rounded-full ${isSelected ? 'bg-white' : 'bg-gray-50'}`}>
+                      {React.cloneElement(cat.icon as React.ReactElement, {
+                        className: `h-5 w-5 ${isSelected ? getCategoryColorClass(cat.id, true).split(' ').find(cls => cls.startsWith('text-')) || '' : 'text-gray-600'}`
+                      })}
                     </div>
-                    <span className="text-xs text-center truncate w-full text-gray-700">
+                    <span className={`text-sm font-medium ${isSelected ? '' : 'text-gray-700'}`}>
                       {cat.name}
                     </span>
-                  </Button>
-                ))}
-              </div>
-              {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
-            </div>
-
-            {/* Payment Methods */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700">
-                {isExpense ? "Payment Method" : "Received Via"}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {paymentMethods.map((method) => (
-                  <Button
-                    key={method.id}
-                    type="button"
-                    onClick={() => setPaymentMethod(method.id)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 p-3 transition-all",
-                      paymentMethod === method.id && `ring-2 ring-${method.color.replace('#', '')} border-transparent shadow-md`
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <method.icon 
-                        className="h-4 w-4" 
-                        style={{ color: method.color }} 
-                      />
-                      <span className="text-gray-700">{method.name}</span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-              {errors.paymentMethod && (
-                <p className="text-sm text-red-500">{errors.paymentMethod}</p>
-              )}
-            </div>
-
-            {/* Date & Notes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-gray-500" />
-                  Date
-                </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className={cn(
-                    "bg-gray-50 border-gray-200 focus:border-blue-500 text-gray-800",
-                    errors.date && "border-red-500 focus:border-red-500"
-                  )}
-                />
-                {errors.date && <p className="text-sm text-red-500">{errors.date}</p>}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-                  Notes (Optional)
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add any additional notes..."
-                  className="bg-gray-50 border-gray-200 focus:border-blue-500 text-gray-800 placeholder:text-gray-400 resize-none h-[38px]"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="pt-4">
-              <Button 
-                type="button" 
-                onClick={onClose} 
-                variant="outline" 
-                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                className={cn(
-                  "px-8 shadow-md",
-                  isExpense 
-                    ? "bg-gradient-to-r from-red-500 to-orange-400 hover:from-red-600 hover:to-orange-500 text-white" 
-                    : "bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-white"
-                )}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                    Processing...
                   </div>
-                ) : (
-                  <>{isEditMode ? 'Update' : 'Save'} {isExpense ? 'Expense' : 'Income'}</>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </motion.div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Payment Method Selection - Completely redesigned for better visibility */}
+          <div className="space-y-3">
+            <Label htmlFor="payment-method" className="text-sm font-medium text-gray-700 block">
+              Payment Method
+            </Label>
+            {paymentMethod && (
+              <div className="bg-indigo-50 p-2 rounded-md mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {paymentMethods.find(m => m.id === paymentMethod || m.name.toLowerCase() === paymentMethod.toLowerCase())?.icon}
+                  <span className="font-medium text-indigo-700">{getSelectedPaymentMethodName()}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setPaymentMethod('')}
+                  className="h-7 w-7 p-0 rounded-full text-indigo-700 hover:bg-indigo-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {paymentMethods.map((method) => (
+                <div
+                  key={method.id}
+                  className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    paymentMethod === method.id || paymentMethod === method.name
+                      ? 'bg-indigo-50 border-indigo-300 shadow-sm' 
+                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setPaymentMethod(method.id)}
+                >
+                  <div className="p-2 rounded-full bg-white">
+                    {method.icon}
+                  </div>
+                  <span className={`text-sm font-medium ${
+                    paymentMethod === method.id || paymentMethod === method.name
+                      ? 'text-indigo-700' 
+                      : 'text-gray-700'
+                  }`}>
+                    {method.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Notes - Enhanced style */}
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="text-sm font-medium text-gray-700 block mb-1">
+              Notes (Optional)
+            </Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any additional details..."
+              className="h-20 text-sm border-gray-300 focus:border-indigo-500"
+            />
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <DialogFooter className="p-4 border-t border-gray-200 flex gap-2 sticky bottom-0 bg-white z-10">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="flex-1 font-medium"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleAddTransaction}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                {isEditing ? 'Updating...' : 'Adding...'}
+              </>
+            ) : (
+              isEditing ? 'Update' : 'Add'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

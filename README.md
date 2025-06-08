@@ -1,4 +1,4 @@
-# SpendSavvy AI Assistant
+# Expense Tracker AI Assistant
 
 An intelligent expense tracker with beautiful design and powerful insights.
 
