@@ -212,6 +212,36 @@ h1, h2, h3, h4, .card-title, .header-title {
     min-width: 2.5rem;
   }
   
+  /* Improved touch targets */
+  button, 
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px; /* Minimum Apple-recommended touch target size */
+    touch-action: manipulation;
+  }
+  
+  /* Make editable fields clearly tappable */
+  .editable-field {
+    position: relative;
+    padding-right: 2.5rem;
+  }
+  
+  .editable-field::after {
+    content: '✎';
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 1rem;
+  }
+  
+  /* Remove hover-only states on mobile */
+  .mobile-visible {
+    opacity: 1 !important;
+  }
+  
   /* Typography adjustments for mobile */
   h1 {
     font-size: 1.5rem;
@@ -231,6 +261,13 @@ h1, h2, h3, h4, .card-title, .header-title {
   .text-sm {
     font-size: 0.8125rem;
   }
+}
+
+/* Fix for mobile dialogs */
+.dialog-mobile {
+  width: calc(100% - 2rem) !important;
+  max-width: none !important;
+  margin: 1rem;
 }
 
 /* Common card styles to be consistent across the app */

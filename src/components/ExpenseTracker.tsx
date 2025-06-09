@@ -264,7 +264,26 @@ export const ExpenseTracker = () => {
     return months[now.getMonth()];
   };
   
-  // Open edit modal for financial data
+  // Add mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if device is mobile on component mount and on window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Set up event listener for resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Enhanced open edit modal function for better mobile experience
   const openEditModal = (field: string) => {
     setCurrentEditField(field);
     
@@ -613,24 +632,26 @@ export const ExpenseTracker = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Dashboard Content - Full width on mobile with improved typography */}
+              {/* Dashboard Content - Full width on mobile */}
               <TabsContent value="dashboard" className="mt-3 md:mt-4 space-y-3 md:space-y-4">
-                {/* Financial Cards - Adjusted for mobile */}
+                {/* Financial Cards - Adjusted for mobile with improved edit buttons */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  {/* Current Balance Card */}
+                  {/* Current Balance Card - Enhanced for mobile */}
                   <div className="bg-white rounded-xl shadow-md p-5 relative card-shadow">
-                    <div className="absolute top-3 right-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs uppercase tracking-wider text-gray-600">
+                        BALANCE
+                      </div>
+                      {/* Enhanced edit button for mobile - more tappable */}
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                        size={isMobile ? "sm" : "icon"} 
+                        className={`${isMobile ? 'h-8 px-2 -mr-2 -mt-1' : 'h-7 w-7'} text-gray-400 hover:text-blue-600 hover:bg-blue-50`}
                         onClick={() => openEditModal('totalBalance')}
                       >
-                        <PencilLine className="h-4 w-4" />
+                        <PencilLine className="h-4 w-4 mr-1" />
+                        {isMobile && <span className="text-xs">Edit</span>}
                       </Button>
-                    </div>
-                    <div className="mb-1 text-xs uppercase tracking-wider text-gray-600">
-                      BALANCE
                     </div>
                     <div className="flex justify-between items-start">
                       <h2 className="text-2xl md:text-3xl font-bold text-gray-900 currency">
@@ -645,20 +666,22 @@ export const ExpenseTracker = () => {
                     </div>
                   </div>
                   
-                  {/* Monthly Income Card */}
+                  {/* Monthly Income Card - Enhanced for mobile */}
                   <div className="bg-white rounded-xl shadow-md p-5 relative card-shadow">
-                    <div className="absolute top-3 right-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs uppercase tracking-wider text-gray-600">
+                        THIS MONTH ({getCurrentMonth()})
+                      </div>
+                      {/* Enhanced edit button for mobile - more tappable */}
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-gray-400 hover:text-green-600 hover:bg-green-50"
+                        size={isMobile ? "sm" : "icon"}
+                        className={`${isMobile ? 'h-8 px-2 -mr-2 -mt-1' : 'h-7 w-7'} text-gray-400 hover:text-green-600 hover:bg-green-50`}
                         onClick={() => openEditModal('monthlyIncome')}
                       >
-                        <PencilLine className="h-4 w-4" />
+                        <PencilLine className="h-4 w-4 mr-1" />
+                        {isMobile && <span className="text-xs">Edit</span>}
                       </Button>
-                    </div>
-                    <div className="mb-1 text-xs uppercase tracking-wider text-gray-600">
-                      THIS MONTH ({getCurrentMonth()})
                     </div>
                     <div className="flex justify-between items-start">
                       <h2 className="text-2xl md:text-3xl font-bold text-gray-900 currency">
@@ -673,20 +696,22 @@ export const ExpenseTracker = () => {
                     </div>
                   </div>
                   
-                  {/* Monthly Expenses Card */}
+                  {/* Monthly Expenses Card - Enhanced for mobile */}
                   <div className="bg-white rounded-xl shadow-md p-5 relative card-shadow">
-                    <div className="absolute top-3 right-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs uppercase tracking-wider text-gray-600">
+                        THIS MONTH ({getCurrentMonth()})
+                      </div>
+                      {/* Enhanced edit button for mobile - more tappable */}
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                        size={isMobile ? "sm" : "icon"}
+                        className={`${isMobile ? 'h-8 px-2 -mr-2 -mt-1' : 'h-7 w-7'} text-gray-400 hover:text-red-600 hover:bg-red-50`}
                         onClick={() => openEditModal('monthlyExpenses')}
                       >
-                        <PencilLine className="h-4 w-4" />
+                        <PencilLine className="h-4 w-4 mr-1" />
+                        {isMobile && <span className="text-xs">Edit</span>}
                       </Button>
-                    </div>
-                    <div className="mb-1 text-xs uppercase tracking-wider text-gray-600">
-                      THIS MONTH ({getCurrentMonth()})
                     </div>
                     <div className="flex justify-between items-start">
                       <h2 className="text-2xl md:text-3xl font-bold text-gray-900 currency">
@@ -982,17 +1007,17 @@ export const ExpenseTracker = () => {
         onClose={() => setShowAddTransaction(false)} 
       />
       
-      {/* Financial Data Edit Modal */}
+      {/* Financial Data Edit Modal - Improved for mobile */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px] p-0 rounded-lg overflow-hidden">
-          <DialogHeader className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <DialogContent className={`${isMobile ? 'w-[95%]' : 'sm:max-w-[425px]'} p-0 rounded-lg overflow-hidden`}>
+          <DialogHeader className="px-5 py-4 bg-gray-50 border-b border-gray-200">
             <DialogTitle className="text-lg font-semibold">
               Edit {currentEditField === 'totalBalance' ? 'Balance' : 
                     currentEditField === 'monthlyIncome' ? 'Monthly Income' : 'Monthly Expenses'}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="p-6 space-y-4">
+          <div className="p-5 space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Amount</label>
               <div className="relative">
@@ -1001,9 +1026,10 @@ export const ExpenseTracker = () => {
                   value={editModalValue}
                   onChange={(e) => setEditModalValue(e.target.value)}
                   type="number"
+                  inputMode="decimal" // Better numeric input for mobile
                   step="0.01"
                   placeholder="0.00"
-                  className="pl-7"
+                  className={`pl-7 ${isMobile ? 'text-lg h-12' : ''}`}
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -1014,11 +1040,18 @@ export const ExpenseTracker = () => {
             </div>
           </div>
           
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+          <div className="px-5 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setEditModalOpen(false)}
+              className={isMobile ? 'h-12 text-base flex-1' : ''}
+            >
               Cancel
             </Button>
-            <Button onClick={saveFinancialData} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button 
+              onClick={saveFinancialData} 
+              className={`bg-blue-600 text-white hover:bg-blue-700 ${isMobile ? 'h-12 text-base flex-1' : ''}`}
+            >
               Save Changes
             </Button>
           </div>
