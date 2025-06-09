@@ -93,7 +93,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     }
   }, [transactionToEdit]);
 
-  // Handle transaction creation
+  // Handle transaction creation with improved mobile support
   const handleAddTransaction = async () => {
     // Form validation
     if (!purpose.trim()) {
@@ -160,10 +160,16 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       const userId = auth.currentUser?.uid;
       if (!userId) return;
 
+      // Convert amount to number with proper validation
+      const numericAmount = Number(amount.toString().replace(/,/g, '').trim());
+      if (isNaN(numericAmount)) {
+        throw new Error("Invalid amount value");
+      }
+
       // Add transaction to Firestore
       const transactionData = {
         purpose,
-        amount: parseFloat(amount),
+        amount: numericAmount,
         type,
         category,
         paymentMethod,
@@ -184,14 +190,28 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         const updateData: any = {};
         
         if (type === 'expense') {
-          updateData.totalBalance = increment(-parseFloat(amount));
-          updateData.monthlyExpenses = increment(parseFloat(amount));
+          // Use the numeric value directly instead of parsing again
+          updateData.totalBalance = increment(-numericAmount);
+          updateData.monthlyExpenses = increment(numericAmount);
         } else {
-          updateData.totalBalance = increment(parseFloat(amount));
-          updateData.monthlyIncome = increment(parseFloat(amount));
+          updateData.totalBalance = increment(numericAmount);
+          updateData.monthlyIncome = increment(numericAmount);
         }
         
-        await updateDoc(financialDocRef, updateData);
+        try {
+          await updateDoc(financialDocRef, updateData);
+        } catch (updateError) {
+          console.error('Error updating financial data:', updateError);
+          // Continue with transaction added but notify about stats update error
+          toast({
+            title: "Transaction added",
+            description: "Transaction added, but financial stats may not be updated correctly.",
+            variant: "default", // Changed from "warning" to "default"
+          });
+          onClose();
+          setIsSubmitting(false);
+          return;
+        }
       }
       
       toast({
@@ -350,20 +370,21 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             />
           </div>
           
-          {/* Amount - Enhanced style */}
+          {/* Amount - Enhanced style with better mobile support */}
           <div className="space-y-2">
             <Label htmlFor="amount" className="text-sm font-medium text-gray-700 block mb-1">Amount</Label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 font-medium">₹</span>
               <Input
                 id="amount"
-                type="number"
+                type="text" // Changed from number to text for better mobile input
+                pattern="[0-9]*\.?[0-9]*" // Restrict to numeric input
+                inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                min="0"
-                step="0.01"
                 className="pl-7 w-full text-lg border-gray-300 focus:border-indigo-500"
+                onFocus={(e) => e.target.select()} // Select all text on focus
               />
             </div>
           </div>

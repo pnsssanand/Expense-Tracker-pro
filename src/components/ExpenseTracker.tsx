@@ -298,9 +298,22 @@ export const ExpenseTracker = () => {
     setEditModalOpen(true);
   };
   
-  // Save edited financial data
+  // Enhanced save financial data function with better mobile support
   const saveFinancialData = async () => {
-    if (!editModalValue || isNaN(parseFloat(editModalValue))) {
+    // Improved validation for mobile input
+    if (!editModalValue) {
+      toast({
+        title: "Missing amount",
+        description: "Please enter a value",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Clean the input to ensure it's valid for parsing
+    const cleanedValue = editModalValue.toString().replace(/,/g, '').trim();
+    
+    if (isNaN(Number(cleanedValue))) {
       toast({
         title: "Invalid amount",
         description: "Please enter a valid number",
@@ -309,23 +322,43 @@ export const ExpenseTracker = () => {
       return;
     }
     
+    const numericValue = Number(cleanedValue);
+    
     try {
       const userId = auth.currentUser?.uid;
-      if (!userId) return;
+      if (!userId) {
+        toast({
+          title: "Authentication error",
+          description: "Please sign in again",
+          variant: "destructive"
+        });
+        return;
+      }
       
       const financialDocRef = doc(db, 'users', userId, 'financialProfile', 'stats');
       
-      // Create update object with only the changed field
+      // Create update object with explicit conversion to number
       const updateData = {
-        [currentEditField]: parseFloat(editModalValue)
+        [currentEditField]: numericValue
       };
       
-      await updateDoc(financialDocRef, updateData);
+      // Update Firestore with retries for mobile network reliability
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await updateDoc(financialDocRef, updateData);
+          break; // Success, exit the retry loop
+        } catch (retryError) {
+          retries--;
+          if (retries === 0) throw retryError; // Rethrow if all retries failed
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+        }
+      }
       
-      // Update local state
+      // Update local state with the converted numeric value
       setFinancialData({
         ...financialData,
-        [currentEditField]: parseFloat(editModalValue)
+        [currentEditField]: numericValue
       });
       
       toast({
@@ -337,9 +370,20 @@ export const ExpenseTracker = () => {
       setEditModalOpen(false);
     } catch (error) {
       console.error("Error updating financial data:", error);
+      
+      // More descriptive error message based on the actual error
+      let errorMessage = "There was a problem saving your changes.";
+      if (error instanceof Error) {
+        if (error.message.includes("network")) {
+          errorMessage = "Network error. Check your internet connection.";
+        } else if (error.message.includes("permission")) {
+          errorMessage = "Permission denied. You may not have access to update this data.";
+        }
+      }
+      
       toast({
         title: "Update failed",
-        description: "There was a problem saving your changes.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -1007,7 +1051,7 @@ export const ExpenseTracker = () => {
         onClose={() => setShowAddTransaction(false)} 
       />
       
-      {/* Financial Data Edit Modal - Improved for mobile */}
+      {/* Financial Data Edit Modal - Improved for mobile with focus on stability */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent className={`${isMobile ? 'w-[95%]' : 'sm:max-w-[425px]'} p-0 rounded-lg overflow-hidden`}>
           <DialogHeader className="px-5 py-4 bg-gray-50 border-b border-gray-200">
@@ -1025,11 +1069,12 @@ export const ExpenseTracker = () => {
                 <Input
                   value={editModalValue}
                   onChange={(e) => setEditModalValue(e.target.value)}
-                  type="number"
+                  type="text" // Changed from number to text for better mobile input
+                  pattern="[0-9]*\.?[0-9]*" // Restrict to numeric input
                   inputMode="decimal" // Better numeric input for mobile
-                  step="0.01"
                   placeholder="0.00"
                   className={`pl-7 ${isMobile ? 'text-lg h-12' : ''}`}
+                  onFocus={(e) => e.target.select()} // Select all text on focus for easier editing
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
